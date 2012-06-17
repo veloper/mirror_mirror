@@ -4,7 +4,7 @@ module MirrorMirror::ActiveRecordBase
   included do
     
     def reflect!
-      hash = self.class.mirror_request(:get, mirror_url)
+      hash = self.class.mirror_request!(:get, mirror_url)
       raise RecordNotFound, "Non-Hash returned from resource: #{mirror_url} => #{hash.inspect}" unless hash.is_a?(Hash)
       raise RecordNotFound, "Empty hash returned from resource."  unless hash.any?
       hash.each {|k,v| send("#{k}=", v) if respond_to?("#{k}=") }
@@ -21,11 +21,10 @@ module MirrorMirror::ActiveRecordBase
 
   module ClassMethods
     
-    def mirror_mirrior(collection_url, options = {})
-      options = {}
-      options[:url]           = collection_url
-      options[:find]          = options[:find].presense || false 
-      options[:request]       = options[:request].to_sym if options[:request].present?
+    def mirror_mirror(*args)
+      options = args.extract_options!
+      raise ArgumentError, "url is blank." if args[0].blank?
+      options[:url]           = args[0]
       @mirror_mirrior_options = options
     end
 
@@ -33,8 +32,13 @@ module MirrorMirror::ActiveRecordBase
       @mirror_mirrior_options.present?
     end
 
+    def mirror_mirror_options(option)
+      @mirror_mirrior_options ||= {}
+      @mirror_mirrior_options[option]
+    end
+
     def mirror_find?
-      mirroring? ? !!@mirror_mirrior_options[:find] : false
+      mirroring? ? @mirror_mirrior_options[:find] : false
     end
 
     def mirror_url(id = nil)
@@ -43,7 +47,7 @@ module MirrorMirror::ActiveRecordBase
       url
     end
 
-    def mirror_request!(verb = :get, url, params = {})
+    def mirror_request!(verb, url, params = {})
       method = @mirror_mirrior_options[:request]
       if method.present?
         raise ArgumentError, "url is blank."          if url.blank?
@@ -93,16 +97,23 @@ module MirrorMirror::ActiveRecordBase
       end
     end
 
+    def reflect_by_id!(id)
+      record = self.new
+      record.id = id
+      record.reflect!
+      record
+    end
+
     def find_or_reflect_by_id!(*args)
       record = find_or_initialize_by_id(*args)
-      record.reflect! if result.new_record?
+      record.reflect! if record.new_record?
       record
     end
 
     def belongs_to(*args)
       options           = args.extract_options!
       association_name  = args[0].to_s
-      options.delete(:auto_reflect) if auto_reflect = options[:auto_reflect].presense
+      options.delete(:auto_reflect) if auto_reflect = options[:auto_reflect].presence
       if auto_reflect
         self.class_eval <<-RUBY
           def #{association_name}
@@ -110,7 +121,7 @@ module MirrorMirror::ActiveRecordBase
               model = send("#{association_name}_type").constantize
               id    = send("#{association_name}_id")
               if id.present? && model.mirroring? 
-                model.find_or_reflect_by_id!(id)
+                model.reflect_by_id!(id)
                 result = super(true)
               end
             end
@@ -123,4 +134,3 @@ module MirrorMirror::ActiveRecordBase
 
   end 
 end
-ActiveRecord::Base.send(:include, MirrorMirror)
