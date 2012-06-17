@@ -13,10 +13,6 @@ module MirrorMirror::ActiveRecordBase
       self
     end
 
-    # TODO - Maybe?
-    def project!
-    end
-
     def mirror_url
       self.class.mirror_url(id)
     end
@@ -26,14 +22,19 @@ module MirrorMirror::ActiveRecordBase
   module ClassMethods
     
     def mirror_mirrior(collection_url, options = {})
-      options           = {}
-      options[:url]     = collection_url
-      options[:request] = options[:request].to_sym if options[:request].present?
+      options = {}
+      options[:url]           = collection_url
+      options[:find]          = options[:find].presense || false 
+      options[:request]       = options[:request].to_sym if options[:request].present?
       @mirror_mirrior_options = options
     end
 
     def mirroring?
       @mirror_mirrior_options.present?
+    end
+
+    def mirror_find?
+      mirroring? ? !!@mirror_mirrior_options[:find] : false
     end
 
     def mirror_url(id = nil)
@@ -56,7 +57,7 @@ module MirrorMirror::ActiveRecordBase
       elsif MirrorMirror.request?
         MirrorMirror.request(verb, url, params)
       else
-         raise FailedReques, "No request method specified."
+         raise FailedRequest, "No request method specified."
       end
     end
 
@@ -79,8 +80,8 @@ module MirrorMirror::ActiveRecordBase
     end
 
     # Active Record Polymorphing
-
     def find(*args)
+      return super unless mirror_find?
       begin
         super
       rescue ActiveRecord::RecordNotFound
@@ -88,11 +89,14 @@ module MirrorMirror::ActiveRecordBase
           record    = self.new
           record.id = id
           record.reflect!
-          record
-        else
-          ActiveRecord::RecordNotFound
         end
       end
+    end
+
+    def find_or_reflect_by_id!(*args)
+      record = find_or_initialize_by_id(*args)
+      record.reflect! if result.new_record?
+      record
     end
 
     def belongs_to(*args)
@@ -103,10 +107,10 @@ module MirrorMirror::ActiveRecordBase
         self.class_eval <<-RUBY
           def #{association_name}
             if (result = super).blank?
-              model     = send("#{association_name}_type").constantize
-              record_id = send("#{association_name}_id")
-              if record_id.present? && model.mirroring? 
-                model.find(record_id)
+              model = send("#{association_name}_type").constantize
+              id    = send("#{association_name}_id")
+              if id.present? && model.mirroring? 
+                model.find_or_reflect_by_id!(id)
                 result = super(true)
               end
             end

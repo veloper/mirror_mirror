@@ -26,3 +26,5 @@ module MirrorMirror
     end
   end
 end
+
+require 'mirror_mirror/railtie' if defined?(Rails)
