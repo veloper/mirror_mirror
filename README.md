@@ -17,7 +17,7 @@ A Ruby gem that allows for easier interactions and integration with external RES
 
     # Extenal Resource
     class Contractor < ActiveRecord::Base
-      has_many :timesheets, :as => :worker
+      has_many :timesheets
       
       mirror_mirror "http://api.example.com/v1/contractors", 
                     :request => :resource_request, :find => true
