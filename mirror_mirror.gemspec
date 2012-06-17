@@ -3,9 +3,9 @@ require File.expand_path('../lib/mirror_mirror/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Daniel Doezema"]
-  gem.email         = ["dan@doezema.com"]
-  gem.description   = %q{Allows an ActiveRecord model to mirror an external REST resource.}
-  gem.summary       = %q{Allows an ActiveRecord model to mirror an external REST resource.}
+  gem.email         = ["daniel.doezema@gmail.com"]
+  gem.description   = %q{Allows for easier interactions and integration with external REST resources.}
+  gem.summary       = %q{Allows for easier interactions and integration with external REST resources.}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
