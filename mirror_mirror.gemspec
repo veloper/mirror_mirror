@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["daniel.doezema@gmail.com"]
   gem.description   = %q{Allows for easier interactions and integration with external REST resources.}
   gem.summary       = %q{Allows for easier interactions and integration with external REST resources.}
-  gem.homepage      = ""
+  gem.homepage      = "https://github.com/veloper/mirror_mirror"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
