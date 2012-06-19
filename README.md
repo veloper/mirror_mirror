@@ -65,6 +65,6 @@ In this scenario a `contractor_id` is present, but we don't know if the `Contrac
     <h1>Today's Punched-In Contractors</h1>
     <ul>
       <% @timesheets.each do |timesheet| %>
-        <li><%= "#{timesheet.worker.first_name} #{timesheet.worker.last_name}"</li>
+        <li><%= "#{timesheet.contractor.first_name} #{timesheet.contractor.last_name}"</li>
       <% end %>
     </ul>
